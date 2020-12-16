@@ -10,21 +10,24 @@ app.use(express.json())
 const books = [
     {
         author: "Steve Berry",
-        title: "Bishop's Pawn"
+        title: "Bishop's Pawn",
+        issued_to: "Jaise"
     },
     {
         author: "Arundhathi Roy",
-        title: "The God of Small Things"
+        title: "The God of Small Things",
+        issued_to: "John"
     },
     {
         author: "Harper Lee",
-        title: "To Kill A Mockingbird"
+        title: "To Kill A Mockingbird",
+        issued_to: "Lisa"
     }
 ]
 
-app.get('/books', (req,res) =>{
+app.get('/books', validateToken,(req,res) =>{
 
-    res.json(books)
+    res.json(books.filter(book => book.issued_to === req.user.name))
 
 })
 
@@ -41,5 +44,21 @@ app.post('/login',(req,res) =>{
 
 
 })
+
+//Extract token from request header and validate
+function validateToken(req,res,next){
+    const authHeader = req.headers['authorization']
+    const token = authHeader && authHeader.split(' ')[1]
+    console.log('token ',token)
+    if(token == null) return res.sendStatus(401)
+
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET,(err,user)=>{
+        if(err) return res.sendStatus(403)
+        req.user = user
+        next()
+
+    })
+
+}
 
 app.listen(3000)
